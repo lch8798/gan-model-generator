@@ -26,9 +26,11 @@ def get_chrome_driver():
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
 
-    # error on arm64
-    # return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-    return webdriver.Chrome(chromedriver_path, options=chrome_options)
+    # for general
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    
+    # for arm64
+    # return webdriver.Chrome(chromedriver_path, options=chrome_options)
 
 def get_google_uri(keyword):
     return f"https://www.google.com/search?q={keyword}&tbm=isch"
