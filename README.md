@@ -1,6 +1,8 @@
 # GAN Model Generator
 
-environment info
+### environment info
+
+/.env
 
 ```
 chromedriverPath = ""
@@ -8,13 +10,13 @@ instagramId = ""
 instagramPassword = ""
 ```
 
-data collector
+### data collector
 
 ```bash
 python collector.py
 ```
 
-dataset viewer
+### dataset viewer
 
 ```bash
 python web_server.py
