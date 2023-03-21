@@ -20,16 +20,21 @@ BASE_URL = "https://www.pinterest.co.kr/resource/BaseSearchResource/get/?"
 MAX = 60
 ONCE_SIZE = 20 # max 250 (2023-03-21)
 
-def get_uri(keyword):
-    return f"https://www.google.com/search?q={keyword}&tbm=isch"
-
 def write_image(name, data):
-    filename = f"datasets/image/{name}.jpg"
+    dir = "datasets/image"
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+        
+    filename = f"{dir}/{name}.jpg"
     with  open(filename, "wb") as f:
         f.write(data)
 
 def write_text(name, data):
-    filename = f"datasets/text/{name}.txt"
+    dir = "datasets/text"
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+            
+    filename = f"{dir}/{name}.txt"
     f = open(filename, "wb")
     f.write(data)
     f.close()
