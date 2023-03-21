@@ -1,5 +1,13 @@
 # GAN Model Generator
 
+environment info
+
+```
+chromedriverPath = ""
+instagramId = ""
+instagramPassword = ""
+```
+
 data collector
 
 ```bash
