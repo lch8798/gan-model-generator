@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>datasets explorer</title>
+    <style>
+            body {
+                font-size: 16px;
+            }
+            ul {
+                padding-left: 0;
+                list-style: none;
+            }
+            li {
+                margin-bottom: 10px;
+            }
+            .gallery {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .gallery img {
+                width: 50%;
+                height: auto;
+                margin-bottom: 10px;
+            }
+            .gallery .caption {
+                width: 50%;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+    </style>
+</head>
+<body>
+    <div class="gallery">
+        {% for item in data %}
+            <div>
+                <img src="/image/{{ item['image'] }}">
+                <div class="caption">{{ item['text'] }}</div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
