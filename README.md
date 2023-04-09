@@ -8,12 +8,13 @@
 chromedriverPath = ""
 instagramId = ""
 instagramPassword = ""
+instagramIgAppId = ""
 ```
 
 ### data collector
 
 ```bash
-python collector.py
+python collector.{PLATFORM}.py
 ```
 
 ### dataset viewer
