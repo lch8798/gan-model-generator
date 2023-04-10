@@ -33,8 +33,10 @@ def get_chrome_driver():
     # for arm64
     # return webdriver.Chrome(chromedriver_path, options=chrome_options)
 
+
 def get_google_uri(keyword):
     return f"https://www.google.com/search?q={keyword}&tbm=isch"
+
 
 def write_image(name, data):
     dir = "datasets/image"
@@ -45,6 +47,7 @@ def write_image(name, data):
     with  open(filename, "wb") as f:
         f.write(data)
 
+
 def write_text(name, data):
     dir = "datasets/text"
     if not os.path.exists(dir):
@@ -54,7 +57,8 @@ def write_text(name, data):
     f = open(filename, "wb")
     f.write(data)
     f.close()
-    
+
+
 def write_dataset(image_uri, text):
     name = secrets.token_hex(nbytes=16)
 
@@ -64,6 +68,7 @@ def write_dataset(image_uri, text):
 
     # text data
     write_text(name, text.encode('utf-8'))
+
 
 def main():
     search_keyword = input("input keyword: ")
@@ -83,4 +88,5 @@ def main():
         print(img_el['alt'])
         print('\n')
         write_dataset(img_el['data-src'], img_el['alt'])
+        
 main()

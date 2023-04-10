@@ -21,12 +21,11 @@ chromedriver_path = os.environ["chromedriverPath"]
 ACCOUNT = {
     'id': os.environ["instagramId"],
     'pw': os.environ["instagramPassword"],
-    'igAppId': os.environ["instagramIgAppId"],
 }
 
 # pinterest param info
 BASE_URL = "https://www.instagram.com"
-MAX = 60
+MAX = 120
 
 @dataclass
 class Section(dict):
@@ -55,12 +54,13 @@ def get_chrome_driver():
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
 
-    # for general
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-    
-    # for arm64
-    # return webdriver.Chrome(chromedriver_path, options=chrome_options)
-    
+    if bool(chromedriver_path):
+        # for arm64
+        return webdriver.Chrome(chromedriver_path, options=chrome_options)
+    else:
+        # for general
+        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
 
 def write_image(name, data):
     dir = "datasets/image"
@@ -122,24 +122,40 @@ def fetch_cookies() -> List[Any]:
     log_btn.click()
 
     time.sleep(10)
+
+    page_source = driver.page_source
+    with open('page_source.html', 'w', encoding='utf-8') as f:
+        f.write(page_source)
+
+    cookies = driver.get_cookies()
     
-    return driver.get_cookies()
+    # get csrf token
+    csrf_token_start = page_source.find('{"csrf_token":"') + len('{"csrf_token":"')
+    csrf_token_end = page_source.find('","viewerId":"')
+    csrf_token = page_source[csrf_token_start:csrf_token_end]
 
+    # get X-IG-App-ID
+    ig_app_id_start = page_source.find('{"X-IG-App-ID":"') + len('{"X-IG-App-ID":"')
+    ig_app_id_end = page_source.find('","X-IG-D":"www"}')
+    ig_app_id = page_source[ig_app_id_start:ig_app_id_end]
 
-def fetch_first(cookies, keyword: str):
+    return cookies, ig_app_id
+    
+
+def fetch_first(cookies, ig_app_id, keyword: str):
     global BASE_URL
     
     cookies_dict = { cookie['name']: cookie['value'] for cookie in cookies }
-    r = requests.get(f"{BASE_URL}/api/v1/tags/web_info/?", headers={ 'x-ig-app-id': ACCOUNT['igAppId'] }, cookies=cookies_dict, params={ 'tag_name': keyword } )
+    r = requests.get(f"{BASE_URL}/api/v1/tags/web_info/?", headers={ 'x-ig-app-id': ig_app_id }, cookies=cookies_dict, params={ 'tag_name': keyword } )
     json_data = json.loads(r.content)
     
     return json_data['data']
 
-def fetch_data(cookies, params, keyword: str):
+def fetch_data(cookies, ig_app_id, params, keyword: str):
     global BASE_URL
     
     cookies_dict = { cookie['name']: cookie['value'] for cookie in cookies }
-    r = requests.post(f"{BASE_URL}/api/v1/tags/{keyword}/sections/", headers={ 'x-ig-app-id': ACCOUNT['igAppId'] }, cookies=cookies_dict, params=params )
+    r = requests.post(f"{BASE_URL}/api/v1/tags/{keyword}/sections/", headers={ 'x-ig-app-id': ig_app_id }, cookies=cookies_dict, params=params )
     json_data = json.loads(r.content)
     
     return json_data
@@ -170,36 +186,54 @@ def parse_sections(sections):
 
 def main():
     global BASE_URL
-    contents = [] # contents
+
+    tab = 'top' # 'top' | 'recent'
+    contents = []
     
     search_keyword = input("input keyword: ")
     
     # fetch cookies
-    cookies = fetch_cookies()
+    cookies, ig_app_id = fetch_cookies()
     print('login success')
     
     # fetch first content
-    first = fetch_first(cookies, search_keyword)
+    first = fetch_first(cookies, ig_app_id, search_keyword)
     
     # merge list
-    contents = [*contents, *parse_sections(first['recent']['sections'])]
+    contents = [*contents, *parse_sections(first[tab]['sections'])]
     print(f"fetch [{MAX if len(contents) > MAX else len(contents)}/{MAX}]")
     
+    if not first[tab]['more_available']:
+        print(f"{tab} more_available is False")
+        
+        # save datasets
+        i = 0
+        for c in contents:
+            i += 1
+            
+            img_url = c['img']
+            text = f"{c['text']}\n{c['predicted']}"
+            
+            write_dataset(img_url, text if text is not None else search_keyword)
+            
+            print(f"download [{i}/{MAX}]")
+
+        return
+
     # next param struct
     next_param = {
         'include_persistent': 0,
         'surface': 'grid',
-        'tab': 'recent',
+        'tab': tab,
         'page': None,
         'max_id': None,
         'next_media_ids': None,
     }
     
     # set next param
-    next_param['page'] = first['recent']['next_page']
-    next_param['max_id'] = first['recent']['next_max_id']
-    next_param['next_media_ids'] = first['recent']['next_media_ids']
-    
+    next_param['page'] = first[tab]['next_page']
+    next_param['max_id'] = first[tab]['next_max_id']
+    next_param['next_media_ids'] = first[tab]['next_media_ids']
 
     # fetch datas
     while True:
@@ -207,9 +241,10 @@ def main():
             break
         
         # fetch data
-        data = fetch_data(cookies, next_param, search_keyword)
+        data = fetch_data(cookies, ig_app_id, next_param, search_keyword)
         
         # parse datas
+        print(data)
         sections = parse_sections(data['sections'])
         contents = [*contents, *sections]
         print(f"fetch [{MAX if len(contents) > MAX else len(contents)}/{MAX}]")

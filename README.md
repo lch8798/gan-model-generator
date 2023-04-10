@@ -8,7 +8,6 @@
 chromedriverPath = ""
 instagramId = ""
 instagramPassword = ""
-instagramIgAppId = ""
 ```
 
 ### data collector

@@ -29,6 +29,7 @@ def write_image(name, data):
     with  open(filename, "wb") as f:
         f.write(data)
 
+
 def write_text(name, data):
     dir = "datasets/text"
     if not os.path.exists(dir):
@@ -39,6 +40,7 @@ def write_text(name, data):
     f.write(data)
     f.close()
     
+
 def write_dataset(image_uri, text):
     name = secrets.token_hex(nbytes=16)
 
@@ -48,6 +50,7 @@ def write_dataset(image_uri, text):
 
     # text data
     write_text(name, text.encode('utf-8'))
+    
     
 def get_params(keyword, bookmark):
     global ONCE_SIZE
